@@ -1,4 +1,10 @@
 
+{
+  "appId": "com.sigmaxroyale.game",
+  "appName": "Sigmax-Royale",
+  "webDir": "www"
+}
+
 name: Build Sigmax-Royale APK
 
 on:
@@ -78,8 +84,3 @@ jobs:
           name: Sigmax-Royale-APK
           path: ${{ env.PROJECT_DIR }}/android/app/build/outputs/apk/debug/app-debug.apk
 
-{
-  "appId": "com.sigmaxroyale.game",
-  "appName": "Sigmax-Royale",
-  "webDir": "www"
-}
