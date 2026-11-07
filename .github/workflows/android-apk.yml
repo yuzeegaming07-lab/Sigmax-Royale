@@ -12,7 +12,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout
+      - name: Checkout repository
         uses: actions/checkout@v4
 
       - name: Setup Node.js
@@ -26,18 +26,49 @@ jobs:
           distribution: temurin
           java-version: 17
 
+      - name: Find and extract project
+        run: |
+          if [ -f "package.json" ]; then
+            echo "PROJECT_DIR=." >> "$GITHUB_ENV"
+          else
+            ZIP_FILE=$(find . -maxdepth 1 -type f -iname "*.zip" | head -n 1)
+
+            if [ -z "$ZIP_FILE" ]; then
+              echo "ZIP project tidak ditemukan!"
+              exit 1
+            fi
+
+            mkdir -p extracted
+            unzip -oq "$ZIP_FILE" -d extracted
+
+            PACKAGE=$(find extracted -type f -name package.json | head -n 1)
+
+            if [ -z "$PACKAGE" ]; then
+              echo "package.json tidak ditemukan!"
+              exit 1
+            fi
+
+            echo "PROJECT_DIR=$(dirname "$PACKAGE")" >> "$GITHUB_ENV"
+          fi
+
       - name: Install dependencies
-        run: npm install
+        run: |
+          cd "$PROJECT_DIR"
+          npm install
 
       - name: Generate Android project
-        run: npx cap add android
+        run: |
+          cd "$PROJECT_DIR"
+          npx cap add android
 
       - name: Sync Capacitor
-        run: npx cap sync android
+        run: |
+          cd "$PROJECT_DIR"
+          npx cap sync android
 
       - name: Build APK
         run: |
-          cd android
+          cd "$PROJECT_DIR/android"
           chmod +x gradlew
           ./gradlew assembleDebug
 
@@ -45,4 +76,4 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: Sigmax-Royale-APK
-          path: android/app/build/outputs/apk/debug/app-debug.apk
+          path: ${{ env.PROJECT_DIR }}/android/app/build/outputs/apk/debug/app-debug.apk
